@@ -11,7 +11,7 @@ import sys
 
 def grab_data(ticker_name):
     ticker = yf.Ticker(ticker_name.upper())
-    hist = ticker.history(period="1mo")["Close"]
+    hist = ticker.history(period="10Y")["Close"]
     csv_hist = hist.to_csv()
     print(csv_hist) #i like using pipes hehe
 #    with open(f"{ticker_name}-1mo.csv", "w") as file: 

@@ -1,0 +1,3 @@
+#!/bin/bash
+#just for future reference
+for csv in $(ls); do echo $csv ; while read -r line; do echo $line | cut -d' ' -f1; echo $line | cut -d',' -f2; done < $csv | paste -d ',' - - > fixedcsv/$csv; done
