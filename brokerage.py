@@ -81,35 +81,54 @@ class Brokerage():
         return output
 
     def _read_in_csvs(self):
+        #Reads in ALL the csvs in csvpath, and stores the contents to self.csvs for quick access. 
         csvpath = "csvs/fixedcsv/"
+        
+        #Get a list of csv files, path is not included
         csvfilelist = [csvpath+f for f in listdir(csvpath) if isfile(join(csvpath, f))] 
+
         for csv in csvfilelist:
             with open(csv, "r") as f:
                 file_contents = f.read()
 
+            #split file by newline
             split_file = file_contents.split("\n")
             tmp_list = []
+            #iterate thru each line in file. Then add a tuple to tmp_list, after splitting the line around ","
             for line in split_file:
+                #(date, price)
                 tmp_list.append(tuple(line.split(",")))
             
+            #store list of tuples to self.csvs for future reference.
             self.csvs[csv.replace(csvpath, "").replace(".csv", "")] = tmp_list
 
+
     def get_day_price_for_ticker(self, ticker, date):
+        #convert datetime object to date string
         datestr = date.strftime("%Y-%m-%d")
+
+        #create list of dates applicable to ticker
         dates = []
 
+        #populate list of dates applicable to ticker
         for tup in self.csvs[ticker]:
             curr_date = tup[0]
-            if len(tup) == 2 and curr_date != '':
-                dates.append(tup[0]) #append the date string to list of dates
-            else:
-                dates.append("9999-99-99") # we don't want to skip because then the indexes wouldn't line up, so we insert a dummy date
 
+            #Checking to make sure that the current tuple is not blank
+            if len(tup) == 2 and curr_date != '': 
+                #append the date string to list of dates
+                dates.append(tup[0]) 
+            else:
+                # we don't want to skip because then the indexes wouldn't line up, so we insert a dummy date
+                dates.append("9999-99-99") 
+        
+        #check to see if date is applicable to ticker, if it isn't we recurse with an earlier day (so if we gave the date for a sunday, it will walk back to the last friday.)
         if datestr in dates:
             date_index = dates.index(datestr)
             return self.csvs[ticker][date_index][1]
         else:
-            return self.get_day_price_for_ticker(ticker, date - timedelta(days=1)) #try subtracting a day, eventually we should get last closing price because date -> datestr will be in dates
+            #try subtracting a day, eventually we should get last closing price because date -> datestr will be in dates
+            return self.get_day_price_for_ticker(ticker, date - timedelta(days=1)) 
 
 
 if __name__ == "__main__":
@@ -118,6 +137,6 @@ if __name__ == "__main__":
     brok._read_in_csvs()
     #print(brok.csvs["AAPL"])
 
-    print(brok.get_day_price_for_ticker("AAPL", datetime.strptime("2024-02-14", "%Y-%m-%d")))
+    print(brok.get_day_price_for_ticker("JBL", datetime.strptime("2024-02-04", "%Y-%m-%d")))
 
 
