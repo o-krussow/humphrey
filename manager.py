@@ -6,8 +6,9 @@ Inputs: broker_acc (Brokerage object), date (datetime object of start date),
 Outputs: tbd
 """
 import brokerage as br
-import strategy as st
+import ss_bsp_strategy as st
 import datetime as dt
+import sys
 
 class Manager:
     def __init__(self, broker_acc, date = dt.datetime.now(), timedelta = -365):
@@ -15,7 +16,7 @@ class Manager:
             raise ValueError
         if date > dt.datetime.now():
             raise ValueError
-        if type(broker_acc) != type(Brokerage(10000)):
+        if type(broker_acc) != type(br.Brokerage(10000)):
             raise ValueError
         self.brokerage = broker_acc
         # create the investment changes variable
@@ -26,14 +27,14 @@ class Manager:
         self.date = date
         
         # create a strategy object for the current date
-        self.strategy = st.Strategy(self.portfolio, self.brokerage.get_prices(self.date, timedelta))
+        self.strategy = st.Strategy(self.portfolio, self.brokerage.get_prices(self.date, timedelta), sys.argv[1], sys.argv[2])
 
     def update_investments(self, skip_confirmation = False):
         """Function to update your investments based on dated csv data using
         the strategy in strategy.py"""
         print("Updating investment strategy...")
         # update our investment changes
-        self.investment_changes = self.strategy.strategize()
+        self.investment_changes = self.strategy.strategize(self.date)
         # ask if they want to buy the new suggestions
         buy = self._confirm_updates(skip = skip_confirmation)
         if buy:
@@ -65,7 +66,7 @@ class Manager:
     def _buy_updates(self):
         """Do the investing"""
         for ticker, amount in self.investment_changes.items():
-            if amount < 0:
+            if amount > 0:
                 self.brokerage.buy(ticker, self.date, amount)
             else:
                 self.brokerage.sell(ticker, self.date, amount)
@@ -77,11 +78,13 @@ class Manager:
 
 def backtesting():
     # create a brokerage account
-    self.brokerage = br.Brokerage(10000)
+    brokerage = br.Brokerage(10000)
     for i in range(0, 10):
         date = dt.datetime.now() + dt.timedelta(-365*i)
-        manager = Manager(date = date) 
-        manager.update_investments(skip_confirmation = True)
+        manager = Manager(brokerage, date = date) 
+        for day in range(0, 365):
+            manager.date = manager.date + dt.timedelta(days = 1)
+            manager.update_investments(skip_confirmation = True)
         print(manager)
 
 if __name__ == "__main__":

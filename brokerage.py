@@ -130,6 +130,19 @@ class Brokerage():
             #try subtracting a day, eventually we should get last closing price because date -> datestr will be in dates
             return self.get_day_price_for_ticker(ticker, date - timedelta(days=1)) 
 
+    
+    def get_prices(self, ticker, date, tdelta):
+        date_tuple_list = []
+
+        curr_date = date
+
+        while (date + tdelta != curr_date):
+            curr_date_str = strftime(curr_date, "%Y-%m-%d")
+            date_tuple_list.append((curr_date_str, get_day_price_for_ticker(ticker, curr_date)))
+            curr_date = curr_date + timedelta(days=1)
+
+        return date_tuple_list
+
 
 if __name__ == "__main__":
     brok = Brokerage()
