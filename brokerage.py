@@ -17,6 +17,8 @@ class Brokerage():
         self._portfolio = {}
         self.csvs = {}
 
+        self._read_in_csvs()
+
     def get_portfolio(self):
         return self._portfolio
 
@@ -127,7 +129,7 @@ class Brokerage():
             else:
                 # we don't want to skip because then the indexes wouldn't line up, so we insert a dummy date
                 dates.append("9999-99-99") 
-        
+
         #check to see if date is applicable to ticker, if it isn't we recurse with an earlier day (so if we gave the date for a sunday, it will walk back to the last friday.)
         if datestr in dates:
             date_index = dates.index(datestr)
@@ -136,9 +138,22 @@ class Brokerage():
             #try subtracting a day, eventually we should get last closing price because date -> datestr will be in dates
             return self.get_day_price_for_ticker(ticker, date - timedelta(days=1)) 
 
-    
     def get_prices(self, date, tdelta):
+        #get_price_data_for_all_tickers wants date+tdelta to be after date, so this is a little wrapper so we can handle negative tdeltas
+        #returns [date, date+tdelta] (inclusive)
+        if date+tdelta > date:
+            #then tdelta is positive
+            return self.get_price_data_for_all_tickers(date, tdelta)
+        else:
+            #then tdelta is negative
+            return self.get_price_data_for_all_tickers(date+tdelta, -1*tdelta)
+
+
+    def get_price_data_for_all_tickers(self, date, tdelta):
         #self, datetime object, datetime delta
+
+        #make inclusive of last date
+        tdelta = tdelta + timedelta(days=1)
 
         price_range_dict = {}
 
@@ -150,7 +165,7 @@ class Brokerage():
             curr_date = date
 
             #Keep adding one day at a time until we reach date+tdelta, then we've collected prices for the whole range.
-            while (curr_date != date + tdelta) :
+            while (curr_date != date + tdelta):
                 curr_date_str = datetime.strftime(curr_date, "%Y-%m-%d")
                 try:
                     #Get current price from get_day_price_for_ticker function since it will fill in gaps for us.
@@ -174,14 +189,12 @@ class Brokerage():
 if __name__ == "__main__":
     brok = Brokerage()
 
-    brok._read_in_csvs()
-
     #print(brok.csvs["AAPL"])
 
     #print(brok.get_day_price_for_ticker("JBL", datetime.strptime("2014-02-13", "%Y-%m-%d")))
 
-    start_date = datetime.strptime("2016-02-13", "%Y-%m-%d")
-    print(brok.get_prices(start_date, timedelta(days=30))["GOVT"])
+    start_date = datetime.strptime("2023-01-07", "%Y-%m-%d")
+    print(brok.get_prices(start_date, timedelta(days=-5))["AAPL"])
 
 
 

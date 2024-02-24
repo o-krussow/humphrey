@@ -25,9 +25,11 @@ class Manager:
         self.portfolio = self.brokerage.get_portfolio()
         # grab the current date
         self.date = date
-        
-        # create a strategy object for the current date
-        self.strategy = st.Strategy(self.portfolio, self.brokerage.get_prices(self.date, timedelta), sys.argv[1], sys.argv[2])
+       
+        testdelta = dt.timedelta(days=2*365)
+
+        # create a strategy object for the current date                                              buy threshold          sell threshold
+        self.strategy = st.Strategy(self.portfolio, self.brokerage.get_prices(self.date, testdelta), float(sys.argv[1]), float(sys.argv[2]))
 
     def update_investments(self, skip_confirmation = False):
         """Function to update your investments based on dated csv data using
@@ -76,17 +78,42 @@ class Manager:
         output = self.brokerage.return_summary()
         return output
 
+#def backtesting():
+#    # create a brokerage account
+#    brokerage = br.Brokerage(10000)
+#    #0 thru -10 years
+#    for i in range(1, 10):
+#        date = dt.datetime.strptime("2024-01-02", "%Y-%m-%d") - dt.timedelta(days=365*i)
+#        #for every year, we make another manager/test of strategy?
+#        manager = Manager(brokerage, date = date) 
+#        for day in range(0, 365):
+#            print(manager.date)
+#            manager.date = manager.date + dt.timedelta(days = 1)
+#            manager.update_investments(skip_confirmation = True)
+#        print(manager)
+
+
 def backtesting():
-    # create a brokerage account
+    #Just wanted to simplify this for now
     brokerage = br.Brokerage(10000)
-    for i in range(0, 10):
-        date = dt.datetime.now() + dt.timedelta(-365*i)
-        manager = Manager(brokerage, date = date) 
-        for day in range(0, 365):
-            manager.date = manager.date + dt.timedelta(days = 1)
-            manager.update_investments(skip_confirmation = True)
-        print(manager)
+    #Start date
+    date = dt.datetime.strptime("2020-01-01", "%Y-%m-%d")
+   
+    manager = Manager(brokerage, date = date) 
+
+    #Going for 365*2 days after start date
+    for i in range(2*365):
+        date = date + dt.timedelta(days=1)
+        manager.date = date
+        manager.update_investments(skip_confirmation = True)
+    print(manager)
+
 
 if __name__ == "__main__":
     backtesting()
+
+
+
+
+
 

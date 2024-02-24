@@ -1,7 +1,7 @@
 import datetime as dt
 
 class Strategy():
-    def __init__(self, prices, buy_threshold, sell_threshold):
+    def __init__(self, portfolio, prices, buy_threshold, sell_threshold):
         self.prices = prices
 
             #Dictionary {Ticker : [(Date, Price), (Date+1, Price), ...]        }
@@ -22,9 +22,10 @@ class Strategy():
     def strategize(self, date):
         
         #Asks itself, "Should I buy Apple on this date?"
+        print("strategize on", date)
 
-        todays_price = self.apple_prices_dict[dt.strftime(date, "%Y-%m-%d")]
-        yesterdays_price = self.apple_prices_dict[dt.strftime(date - dt.timedelta(days = 1), "%Y-%m-%d")]
+        todays_price = self.apple_price_dict[dt.datetime.strftime(date, "%Y-%m-%d")]
+        yesterdays_price = self.apple_price_dict[dt.datetime.strftime(date - dt.timedelta(days = 1), "%Y-%m-%d")]
         self.suggested_moves["AAPL"] = 0
 
 
