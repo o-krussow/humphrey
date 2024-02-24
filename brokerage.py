@@ -98,7 +98,9 @@ class Brokerage():
             for line in split_file:
                 #(date, price)
                 tmp_list.append(tuple(line.split(",")))
-            
+
+            if csv.replace(csvpath, "") == "fixedcsv":
+                continue
             #store list of tuples to self.csvs for future reference.
             self.csvs[csv.replace(csvpath, "").replace(".csv", "")] = tmp_list
 
@@ -107,9 +109,9 @@ class Brokerage():
         #convert datetime object to date string
         datestr = date.strftime("%Y-%m-%d")
 
-        #Check to see if requested date is before first date/price listed in csvs
+        #Check to see if requested date is before first date/price listed in csvs, if it is we return 0
         if date < datetime.strptime(self.csvs[ticker][1][0], "%Y-%m-%d"):
-            raise Exception("Requested date is before first date for ticker")
+            raise Exception("Price DNE yet")
 
         #create list of dates applicable to ticker
         dates = []
@@ -135,25 +137,52 @@ class Brokerage():
             return self.get_day_price_for_ticker(ticker, date - timedelta(days=1)) 
 
     
-    def get_prices(self, ticker, date, tdelta):
-        date_tuple_list = []
+    def get_prices(self, date, tdelta):
+        #self, datetime object, datetime delta
 
-        curr_date = date
+        price_range_dict = {}
 
-        while (date + tdelta != curr_date):
-            curr_date_str = strftime(curr_date, "%Y-%m-%d")
-            date_tuple_list.append((curr_date_str, get_day_price_for_ticker(ticker, curr_date)))
-            curr_date = curr_date + timedelta(days=1)
+        #Loop thru all the tickers (dict keys) in our csv dictionary
+        for ticker in self.csvs:
+            price_range_dict[ticker] = []
+    
+            #Set start date to initial date
+            curr_date = date
 
-        return date_tuple_list
+            #Keep adding one day at a time until we reach date+tdelta, then we've collected prices for the whole range.
+            while (curr_date != date + tdelta) :
+                curr_date_str = datetime.strftime(curr_date, "%Y-%m-%d")
+                try:
+                    #Get current price from get_day_price_for_ticker function since it will fill in gaps for us.
+                    curr_price = self.get_day_price_for_ticker(ticker, curr_date)
+
+                    #Appending date and price to our dictionary
+                    price_range_dict[ticker].append((curr_date_str, curr_price))
+
+                    #Increment day
+                    curr_date = curr_date + timedelta(days=1)
+                except Exception as e:
+                    #If we run into exception, that means that prices didn't exist for this ticker at the beginning of the date range
+                    #So we stop this while loop and move to the next ticker (next iteration of for loop)
+                    #print(e)
+                    break
+
+        #This function WILL have keys for tickers that don't exist in the beginning of the date range, but WON'T have any prices/dates for them.
+        return price_range_dict
 
 
 if __name__ == "__main__":
     brok = Brokerage()
 
     brok._read_in_csvs()
+
     #print(brok.csvs["AAPL"])
 
-    print(brok.get_day_price_for_ticker("JBL", datetime.strptime("2014-02-18", "%Y-%m-%d")))
+    #print(brok.get_day_price_for_ticker("JBL", datetime.strptime("2014-02-13", "%Y-%m-%d")))
+
+    start_date = datetime.strptime("2016-02-13", "%Y-%m-%d")
+    print(brok.get_prices(start_date, timedelta(days=30))["GOVT"])
+
+
 
 
