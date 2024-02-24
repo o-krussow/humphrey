@@ -99,7 +99,12 @@ class Brokerage():
             #iterate thru each line in file. Then add a tuple to tmp_list, after splitting the line around ","
             for line in split_file:
                 #(date, price)
-                tmp_list.append(tuple(line.split(",")))
+                try:
+                    tmp_list.append((line.split(",")[0], float(line.split(",")[1])))
+                except ValueError:
+                    continue
+                except IndexError:
+                    continue
 
             if csv.replace(csvpath, "") == "fixedcsv":
                 continue
