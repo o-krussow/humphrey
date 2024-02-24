@@ -107,6 +107,10 @@ class Brokerage():
         #convert datetime object to date string
         datestr = date.strftime("%Y-%m-%d")
 
+        #Check to see if requested date is before first date/price listed in csvs
+        if date < datetime.strptime(self.csvs[ticker][1][0], "%Y-%m-%d"):
+            raise Exception("Requested date is before first date for ticker")
+
         #create list of dates applicable to ticker
         dates = []
 
@@ -150,6 +154,6 @@ if __name__ == "__main__":
     brok._read_in_csvs()
     #print(brok.csvs["AAPL"])
 
-    print(brok.get_day_price_for_ticker("JBL", datetime.strptime("2024-02-04", "%Y-%m-%d")))
+    print(brok.get_day_price_for_ticker("JBL", datetime.strptime("2014-02-18", "%Y-%m-%d")))
 
 
