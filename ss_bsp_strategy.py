@@ -40,5 +40,6 @@ class Strategy():
         if self.holding_stock == True:
             if todays_price >= self.sell_price:
                 self.suggested_moves["AAPL"] = -1
+                self.holding_stock = False
 
         return self.suggested_moves

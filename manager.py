@@ -101,6 +101,7 @@ class Manager:
 def backtesting():
     #Just wanted to simplify this for now
     brokerage = br.Brokerage(10000)
+
     #Start date
     date = dt.datetime.strptime("2020-01-01", "%Y-%m-%d")
   
