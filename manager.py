@@ -11,9 +11,9 @@ import datetime as dt
 import sys
 
 class Manager:
-    def __init__(self, broker_acc, date = dt.datetime.now(), timedelta = -365):
-        if timedelta >= 0:
-            raise ValueError
+    def __init__(self, broker_acc, date = dt.datetime.now(), timedelta = dt.timedelta(days=2*365)):
+        #if timedelta >= 0: ?
+        #    raise ValueError
         if date > dt.datetime.now():
             raise ValueError
         if type(broker_acc) != type(br.Brokerage(10000)):
@@ -26,10 +26,10 @@ class Manager:
         # grab the current date
         self.date = date
        
-        testdelta = dt.timedelta(days=2*365)
+        self.tdelta = timedelta
 
         # create a strategy object for the current date                                              buy threshold          sell threshold
-        self.strategy = st.Strategy(self.portfolio, self.brokerage.get_prices(self.date, testdelta), float(sys.argv[1]), float(sys.argv[2]))
+        self.strategy = st.Strategy(self.portfolio, self.brokerage.get_prices(self.date, self.tdelta), float(sys.argv[1]), float(sys.argv[2]))
 
     def update_investments(self, skip_confirmation = False):
         """Function to update your investments based on dated csv data using
@@ -69,13 +69,18 @@ class Manager:
         """Do the investing"""
         for ticker, amount in self.investment_changes.items():
             if amount > 0:
+                print("BUY:",ticker, self.date, amount)
                 self.brokerage.buy(ticker, self.date, amount)
-            else:
+            elif amount < 0:
+                print("SELL:",ticker, self.date, amount)
                 self.brokerage.sell(ticker, self.date, amount)
+            else:
+                #amount == 0
+                continue
 
     def __str__(self):
         output = ""
-        output = self.brokerage.return_summary()
+        output = self.brokerage.return_summary(self.date + self.tdelta)
         return output
 
 #def backtesting():
@@ -98,7 +103,9 @@ def backtesting():
     brokerage = br.Brokerage(10000)
     #Start date
     date = dt.datetime.strptime("2020-01-01", "%Y-%m-%d")
-   
+  
+    timedelta = dt.timedelta(days=2*365)
+
     manager = Manager(brokerage, date = date) 
 
     #Going for 365*2 days after start date

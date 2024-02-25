@@ -24,7 +24,7 @@ class Brokerage():
 
     def buy(self, ticker, date, stock_quantity):
        
-        date_price = 0 #HOWEVER WE ACCESS THE PRICE
+        date_price = self.get_day_price_for_ticker(ticker, date) #HOWEVER WE ACCESS THE PRICE
         dollar_amount = stock_quantity * date_price
 
         #HANDLE THESE SOMEWHERE
@@ -43,8 +43,10 @@ class Brokerage():
 
 
     def sell(self, ticker, date, stock_quantity):
-       
-        date_price = 0 #HOWEVER WE ACCESS THE PRICE
+        #this comes in as a negative number but it's easier for it not to be
+        stock_quantity = stock_quantity * -1
+
+        date_price = self.get_day_price_for_ticker(ticker, date) #HOWEVER WE ACCESS THE PRICE
         dollar_amount = stock_quantity * date_price
 
         #HANDLE THESE SOMEWHERE
@@ -67,7 +69,7 @@ class Brokerage():
     def account_total(self, date):
         total = 0
         for (ticker, stock_quantity) in self._portfolio.items():
-            date_price = 0 #HOWEVER WE ACCESS THE PRICE
+            date_price = self.get_day_price_for_ticker(ticker, date) 
             total += stock_quantity * date_price
 
         return total
@@ -76,7 +78,7 @@ class Brokerage():
     def return_summary(self, date):
         output = f" Account Total: {self.account_total(date)} | Cash Total: {self.cash}"
         for (ticker, stock_quantity) in self._portfolio.items():
-            date_price = 0 #HOWEVER WE ACCESS THE PRICE
+            date_price = self.get_day_price_for_ticker(ticker, date) 
             cash_value = stock_quantity * date_price
             output + f"{ticker}: {stock_quantity} owned, worth {cash_value}\n"
 
