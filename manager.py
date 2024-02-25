@@ -34,11 +34,12 @@ class Manager:
     def update_investments(self, skip_confirmation = False):
         """Function to update your investments based on dated csv data using
         the strategy in strategy.py"""
-        print("Updating investment strategy...")
         # update our investment changes
         self.investment_changes = self.strategy.strategize(self.date)
         # ask if they want to buy the new suggestions
-        buy = self._confirm_updates(skip = skip_confirmation)
+        
+        #buy = self._confirm_updates(skip = skip_confirmation)
+        buy = True
         if buy:
             self._buy_updates()
 
@@ -69,10 +70,8 @@ class Manager:
         """Do the investing"""
         for ticker, amount in self.investment_changes.items():
             if amount > 0:
-                print("BUY:",ticker, self.date, amount)
                 self.brokerage.buy(ticker, self.date, amount)
             elif amount < 0:
-                print("SELL:",ticker, self.date, amount)
                 self.brokerage.sell(ticker, self.date, amount)
             else:
                 #amount == 0

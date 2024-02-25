@@ -76,7 +76,7 @@ class Brokerage():
 
     
     def return_summary(self, date):
-        output = f" Account Total: {self.account_total(date)} | Cash Total: {self.cash}"
+        output = f" Account Total: {self.account_total(date)} | Cash Total: {self.cash} | Total Total: {self.cash+self.account_total(date)}"
         for (ticker, stock_quantity) in self._portfolio.items():
             date_price = self.get_day_price_for_ticker(ticker, date) 
             cash_value = stock_quantity * date_price

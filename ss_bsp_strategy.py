@@ -22,7 +22,6 @@ class Strategy():
     def strategize(self, date):
         
         #Asks itself, "Should I buy Apple on this date?"
-        print("strategize on", date)
 
         todays_price = self.apple_price_dict[dt.datetime.strftime(date, "%Y-%m-%d")]
         yesterdays_price = self.apple_price_dict[dt.datetime.strftime(date - dt.timedelta(days = 1), "%Y-%m-%d")]
