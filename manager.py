@@ -2,34 +2,50 @@
 Manager.py
 Purpose: facilitate connection between brokerage and strategy for investment
 Inputs: broker_acc (Brokerage object), date (datetime object of start date), 
-        timedelta (negative integer representing data timespan)
+        timedelta (integer representing data timespan)
 Outputs: tbd
 """
 import brokerage as br
-import ss_bsp_strategy as st
+import ss_bsp_strategy as bsp
 import datetime as dt
 import sys
+import pickle
 
 class Manager:
-    def __init__(self, broker_acc, date = dt.datetime.now(), timedelta = dt.timedelta(days=2*365)):
+    def __init__(self, strat, start_cash = 10000, date = dt.datetime.now(), timedelta = dt.timedelta(days=2*365)):
         #if timedelta >= 0: ?
         #    raise ValueError
         if date > dt.datetime.now():
-            raise ValueError
-        if type(broker_acc) != type(br.Brokerage(10000)):
-            raise ValueError
-        self.brokerage = broker_acc
+            raise ValueError("Invalid date")
+
+        #loading pickled data
+        file = open('pickled_csvs', 'rb')
+        self.csvs = pickle.load(file)
+        file.close()
+
         # create the investment changes variable
         self.investment_changes = {}
+
+        # initialize the brokerage account
+        self.brokerage = br.Brokerage(self.csvs, start_cash)
+
         # grab our portfolio and store it
         self.portfolio = self.brokerage.get_portfolio()
+
         # grab the current date
         self.date = date
        
         self.tdelta = timedelta
+        
 
-        # create a strategy object for the current date                                              buy threshold          sell threshold
-        self.strategy = st.Strategy(self.portfolio, self.brokerage.get_prices(self.date, self.tdelta), float(sys.argv[1]), float(sys.argv[2]))
+        
+        if strat == "ss_bsp":
+            # create a bsp strategy object for the current date                                                    buy threshold&sell threshold in tuple
+            self.strategy = bsp.SS_BSP_Strategy(self.portfolio, self.brokerage.get_prices(self.date, self.tdelta), sys.argv)
+        #elif strat == "example":
+        #   self.strategy = example.Example_Strategy(self.portfolio, self.bro...
+        else:
+            raise ValueError(f"{strat} is not a valid strategy")
 
     def update_investments(self, skip_confirmation = False):
         """Function to update your investments based on dated csv data using
@@ -79,48 +95,36 @@ class Manager:
 
     def __str__(self):
         output = ""
-        output = self.brokerage.return_summary(self.date + self.tdelta)
+        output = self.brokerage.return_summary(self.date, self.date + self.tdelta)
         return output
 
-#def backtesting():
-#    # create a brokerage account
-#    brokerage = br.Brokerage(10000)
-#    #0 thru -10 years
-#    for i in range(1, 10):
-#        date = dt.datetime.strptime("2024-01-02", "%Y-%m-%d") - dt.timedelta(days=365*i)
-#        #for every year, we make another manager/test of strategy?
-#        manager = Manager(brokerage, date = date) 
-#        for day in range(0, 365):
-#            print(manager.date)
-#            manager.date = manager.date + dt.timedelta(days = 1)
-#            manager.update_investments(skip_confirmation = True)
-#        print(manager)
-
-
-def backtesting():
-    #Just wanted to simplify this for now
-    brokerage = br.Brokerage(10000)
+def backtesting(strat, verbose = False):
 
     #Start date
     date = dt.datetime.strptime("2020-01-01", "%Y-%m-%d")
   
     timedelta = dt.timedelta(days=2*365)
 
-    manager = Manager(brokerage, date = date) 
+    # Make the manager
+    start_cash = 10000
+    manager = Manager(strat, start_cash, date = date, timedelta = timedelta) 
 
     #Going for 365*2 days after start date
     for i in range(2*365):
         date = date + dt.timedelta(days=1)
         manager.date = date
         manager.update_investments(skip_confirmation = True)
-    print(manager)
 
+    # Grab the percent return
+    percent_return = manager.brokerage.get_percent_growth(date + timedelta)
+
+    # Print it and relevant information
+    output = ""
+    for arg in sys.argv[1:]:
+        output += arg + ","
+    output += str(percent_return)
+    print(output)
 
 if __name__ == "__main__":
-    backtesting()
-
-
-
-
-
+    backtesting(sys.argv[1], True)
 

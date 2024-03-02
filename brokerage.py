@@ -1,23 +1,19 @@
-from os import listdir
-from os.path import isfile, join
 from datetime import datetime, timedelta
 
-'''IDEAS
-        -Make functions that show stuff like return or growth over time or something idk
-        
+'''IDEAS        
         -Eventually will need to track how many trades each ticker has and how long we held each ticker so that we can incorporate management/holding and trading fees
 '''
 
 class Brokerage():
-    def __init__(self, starting_cash = 10000):
+    def __init__(self, csvs, starting_cash = 10000, verbose = False):
         
         #Establishes the dictionary that keeps track of everything
         #Cash is in dollars, every security is in amount of stocks owned
+        self.starting_cash = starting_cash
         self.cash = starting_cash
         self._portfolio = {}
-        self.csvs = {}
-
-        self._read_in_csvs()
+        self.csvs = csvs
+        self.verbose = verbose
 
     def get_portfolio(self):
         return self._portfolio
@@ -38,8 +34,9 @@ class Brokerage():
         self.cash -= dollar_amount
         self._portfolio[ticker] += stock_quantity
 
-        print(f"{date}:  Bought {stock_quantity} amount of {ticker} stock for ${dollar_amount}")
-        print(f" Account Total: {self.account_total(date)} | Cash Total: {self.cash}")#might be too much
+        if self.verbose == True:
+            print(f"{date}:  Bought {stock_quantity} amount of {ticker} stock for ${dollar_amount}")
+            print(f" Account Total: {self.holdings_total(date)} | Cash Total: {self.cash}\n")#might be too much
 
 
     def sell(self, ticker, date, stock_quantity):
@@ -61,12 +58,12 @@ class Brokerage():
         self.cash += dollar_amount
         self._portfolio[ticker] -= stock_quantity
 
-        print(f"{date}:  Sold {stock_quantity} amount of {ticker} stock for ${dollar_amount}")
-        print(f" Account Total: {self.account_total(date)} | Cash Total: {self.cash}") #might be too much
+        if self.verbose == True:
+            print(f"{date}:  Sold {stock_quantity} amount of {ticker} stock for ${dollar_amount}")
+            print(f" Account Total: {self.holdings_total(date)} | Cash Total: {self.cash}\n") #might be too much
 
 
-
-    def account_total(self, date):
+    def holdings_total(self, date):
         total = 0
         for (ticker, stock_quantity) in self._portfolio.items():
             date_price = self.get_day_price_for_ticker(ticker, date) 
@@ -75,43 +72,42 @@ class Brokerage():
         return total
 
     
-    def return_summary(self, date):
-        output = f" Account Total: {self.account_total(date)} | Cash Total: {self.cash} | Total Total: {self.cash+self.account_total(date)}"
+    def get_percent_growth(self, end_date):
+        final_holdings_total = self.holdings_total(end_date)
+        percent_growth = (self.cash + final_holdings_total) / self.starting_cash - 1
+        return percent_growth
+
+
+    def return_summary(self, start_date, end_date):
+        final_holdings_total = self.holdings_total(end_date)
+
+        output = "ACCOUNT SUMMARY".center(50, "=")
+
+        output += "\nHoldings:\n"
         for (ticker, stock_quantity) in self._portfolio.items():
-            date_price = self.get_day_price_for_ticker(ticker, date) 
+            date_price = self.get_day_price_for_ticker(ticker, end_date) 
             cash_value = stock_quantity * date_price
-            output + f"{ticker}: {stock_quantity} owned, worth {cash_value}\n"
+            output += f"   {ticker}: {stock_quantity} owned, worth {cash_value}\n"
+
+        output += "\nTotals:\n"
+        output += f"Holdings Total: {final_holdings_total} | Cash Total: {self.cash} | Account Total: {self.cash + final_holdings_total}\n"
+
+        output += "\nReturn:\n"
+        output += f"Dollar Return: {self.cash + final_holdings_total - self.starting_cash} | Percent Return: {(self.cash+final_holdings_total) / self.starting_cash - 1} \n"
+
+        output += "\nBenchmarks:\n"
+        Apple_start = self.get_day_price_for_ticker("AAPL", start_date)
+        Apple_end = self.get_day_price_for_ticker("AAPL", end_date)
+        output += f"AAPL Dollar Growth: {Apple_end - Apple_start} | AAPL Percent Growth: {(Apple_end / Apple_start) - 1}"
+        
+
+
+
+
+
+            
 
         return output
-
-    def _read_in_csvs(self):
-        #Reads in ALL the csvs in csvpath, and stores the contents to self.csvs for quick access. 
-        csvpath = "csvs/fixedcsv/"
-        
-        #Get a list of csv files, path is not included
-        csvfilelist = [csvpath+f for f in listdir(csvpath) if isfile(join(csvpath, f))] 
-
-        for csv in csvfilelist:
-            with open(csv, "r") as f:
-                file_contents = f.read()
-
-            #split file by newline
-            split_file = file_contents.split("\n")
-            tmp_list = []
-            #iterate thru each line in file. Then add a tuple to tmp_list, after splitting the line around ","
-            for line in split_file:
-                #(date, price)
-                try:
-                    tmp_list.append((line.split(",")[0], float(line.split(",")[1])))
-                except ValueError:
-                    continue
-                except IndexError:
-                    continue
-
-            if csv.replace(csvpath, "") == "fixedcsv":
-                continue
-            #store list of tuples to self.csvs for future reference.
-            self.csvs[csv.replace(csvpath, "").replace(".csv", "")] = tmp_list
 
 
     def get_day_price_for_ticker(self, ticker, date):
@@ -155,7 +151,6 @@ class Brokerage():
             #then tdelta is negative
             return self.get_price_data_for_all_tickers(date+tdelta, -1*tdelta)
 
-
     def get_price_data_for_all_tickers(self, date, tdelta):
         #self, datetime object, datetime delta
 
@@ -191,18 +186,6 @@ class Brokerage():
 
         #This function WILL have keys for tickers that don't exist in the beginning of the date range, but WON'T have any prices/dates for them.
         return price_range_dict
-
-
-if __name__ == "__main__":
-    brok = Brokerage()
-
-    #print(brok.csvs["AAPL"])
-
-    #print(brok.get_day_price_for_ticker("JBL", datetime.strptime("2014-02-13", "%Y-%m-%d")))
-
-    start_date = datetime.strptime("2023-01-07", "%Y-%m-%d")
-    print(brok.get_prices(start_date, timedelta(days=-5))["AAPL"])
-
 
 
 

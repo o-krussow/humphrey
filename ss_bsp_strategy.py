@@ -1,14 +1,15 @@
 import datetime as dt
+from strategy import Strategy
 
-class Strategy():
-    def __init__(self, portfolio, prices, buy_threshold, sell_threshold):
+class SS_BSP_Strategy(Strategy):
+    def __init__(self, portfolio, prices, cmdline_args):
         self.prices = prices
 
             #Dictionary {Ticker : [(Date, Price), (Date+1, Price), ...]        }
 
+        self.buy_threshold, self.sell_threshold = float(cmdline_args[2]), float(cmdline_args[3])
         self.suggested_moves = {}
-        self.buy_threshold = buy_threshold
-        self.sell_threshold = sell_threshold
+
         self.apple_price = prices["AAPL"]
 
         self.apple_price_dict = {}
@@ -42,3 +43,6 @@ class Strategy():
                 self.holding_stock = False
 
         return self.suggested_moves
+
+
+
