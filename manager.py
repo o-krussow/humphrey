@@ -79,9 +79,8 @@ class Manager:
         # return true
         else:
             print("Set to skip confirmation...")
-        print("Proceeding to purchase portfolio updates...")
+        print("Proceeding to purchase portfolio updates...") 
         return True
-
     def _buy_updates(self):
         """Do the investing"""
         for ticker, amount in self.investment_changes.items():
@@ -120,9 +119,9 @@ def backtesting(strat, verbose = False):
 
     # Print it and relevant information
     output = ""
+    output += str(percent_return)
     for arg in sys.argv[1:]:
         output += arg + ","
-    output += str(percent_return)
     print(output)
 
 if __name__ == "__main__":
