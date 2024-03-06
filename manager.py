@@ -7,6 +7,7 @@ Outputs: tbd
 """
 import brokerage as br
 import ss_bsp_strategy as bsp
+import momentum_basic as mb
 import datetime as dt
 import sys
 import pickle
@@ -41,9 +42,11 @@ class Manager:
         
         if strat == "ss_bsp":
             # create a bsp strategy object for the current date                                                    buy threshold&sell threshold in tuple
-            self.strategy = bsp.SS_BSP_Strategy(self.portfolio, self.brokerage.get_prices(self.date, self.tdelta), sys.argv)
+            self.strategy = bsp.SS_BSP_Strategy(self.brokerage.get_prices(self.date, self.tdelta), sys.argv)
+        elif strat == "momentum_basic":
+           self.strategy = mb.Momentum_Basic(self.brokerage.get_prices(self.date, self.tdelta))
         #elif strat == "example":
-        #   self.strategy = example.Example_Strategy(self.portfolio, self.bro...
+        #   self.strategy = example.Example_Strategy(self.bro...
         else:
             raise ValueError(f"{strat} is not a valid strategy")
 
@@ -51,7 +54,7 @@ class Manager:
         """Function to update your investments based on dated csv data using
         the strategy in strategy.py"""
         # update our investment changes
-        self.investment_changes = self.strategy.strategize(self.date)
+        self.investment_changes = self.strategy.strategize(self.date, self.portfolio)
         # ask if they want to buy the new suggestions
         
         #buy = self._confirm_updates(skip = skip_confirmation)
@@ -83,34 +86,36 @@ class Manager:
         return True
     def _buy_updates(self):
         """Do the investing"""
+        #Had to reorganize this to make sure all selling happened first so we have cash on hand to purchase
+        for ticker, amount in self.investment_changes.items():
+            if amount < 0:
+                self.brokerage.sell(ticker, self.date, amount)
+
         for ticker, amount in self.investment_changes.items():
             if amount > 0:
                 self.brokerage.buy(ticker, self.date, amount)
-            elif amount < 0:
-                self.brokerage.sell(ticker, self.date, amount)
-            else:
-                #amount == 0
-                continue
 
     def __str__(self):
         output = ""
         output = self.brokerage.return_summary(self.date, self.date + self.tdelta)
         return output
 
-def backtesting(strat, verbose = False):
+def backtesting(strat, start_date_str, years, verbose = False):
 
     #Start date
-    date = dt.datetime.strptime("2020-01-01", "%Y-%m-%d")
+    date = dt.datetime.strptime(start_date_str, "%Y-%m-%d")
   
-    timedelta = dt.timedelta(days=2*365)
+    timedelta = dt.timedelta(days=years*365)
 
     # Make the manager
     start_cash = 10000
     manager = Manager(strat, start_cash, date = date, timedelta = timedelta) 
 
-    #Going for 365*2 days after start date
-    for i in range(2*365):
-        date = date + dt.timedelta(days=1)
+    #Going for 365*years days after start date
+    for i in range(int(years*365/30)):
+        date = date + dt.timedelta(days=30)             
+        ### I CHANGED THIS FOR MOMENTUM FROM 1 TO 30!!! ###
+
         manager.date = date
         manager.update_investments(skip_confirmation = True)
 
@@ -118,12 +123,22 @@ def backtesting(strat, verbose = False):
     percent_return = manager.brokerage.get_percent_growth(date + timedelta)
 
     # Print it and relevant information
-    output = ""
-    output += str(percent_return)
-    for arg in sys.argv[1:]:
-        output += arg + ","
-    print(output)
+    if verbose == False:
+        output = ""
+        output += str(percent_return)
+        for arg in sys.argv[1:]:
+            output += arg + ","
+        print(output)
+
+    else:
+        print(manager.brokerage.return_summary(date, date + timedelta))
 
 if __name__ == "__main__":
-    backtesting(sys.argv[1], True)
+
+    start_date_str = "2019-01-01"
+    
+    #           Strategy Name |        ^^^    | total years
+    backtesting(sys.argv[1],    start_date_str,      3, True)
+
+    #backtesting("momentum_basic",    start_date_str,  4, True)
 

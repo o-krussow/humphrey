@@ -24,7 +24,7 @@ class Brokerage():
         dollar_amount = stock_quantity * date_price
 
         #HANDLE THESE SOMEWHERE
-        if dollar_amount > self.cash:
+        if round(dollar_amount, 2) > round(self.cash, 2):
             raise ValueError ("You do not have enough cash for this purchase")
         
         #Add a new ticker to holding if needed
@@ -96,17 +96,10 @@ class Brokerage():
         output += f"Dollar Return: {self.cash + final_holdings_total - self.starting_cash} | Percent Return: {(self.cash+final_holdings_total) / self.starting_cash - 1} \n"
 
         output += "\nBenchmarks:\n"
-        Apple_start = self.get_day_price_for_ticker("AAPL", start_date)
-        Apple_end = self.get_day_price_for_ticker("AAPL", end_date)
-        output += f"AAPL Dollar Growth: {Apple_end - Apple_start} | AAPL Percent Growth: {(Apple_end / Apple_start) - 1}"
+        IVV_start = self.get_day_price_for_ticker("IVV", start_date)
+        IVV_end = self.get_day_price_for_ticker("IVV", end_date)
+        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1}"
         
-
-
-
-
-
-            
-
         return output
 
 
@@ -161,6 +154,7 @@ class Brokerage():
 
         #Loop thru all the tickers (dict keys) in our csv dictionary
         for ticker in self.csvs:
+            self._portfolio[ticker] = 0
             price_range_dict[ticker] = []
     
             #Set start date to initial date
@@ -186,6 +180,4 @@ class Brokerage():
 
         #This function WILL have keys for tickers that don't exist in the beginning of the date range, but WON'T have any prices/dates for them.
         return price_range_dict
-
-
 
