@@ -4,7 +4,7 @@ from os.path import isfile, join
 
 csvs = {}
 
-csvpath = "csvs/fixedcsv/"
+csvpath = "csvs/"
         
 #Get a list of csv files, path is not included
 csvfilelist = [csvpath+f for f in listdir(csvpath) if isfile(join(csvpath, f))] 
