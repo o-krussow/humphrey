@@ -8,6 +8,8 @@ Outputs: tbd
 import brokerage as br
 import ss_bsp_strategy as bsp
 import momentum_basic as mb
+import static_60_40 as s6040
+import static_IVV as sIVV
 import datetime as dt
 import sys
 import pickle
@@ -38,13 +40,20 @@ class Manager:
        
         self.tdelta = timedelta
         
-
+        self.start_cash = start_cash
+        
+        self.account_returns = {}
+        self.account_returns[ dt.datetime.strftime(date, "%Y-%m-%d") ]= start_cash
         
         if strat == "ss_bsp":
             # create a bsp strategy object for the current date                                                    buy threshold&sell threshold in tuple
             self.strategy = bsp.SS_BSP_Strategy(self.brokerage.get_prices(self.date, self.tdelta), sys.argv)
         elif strat == "momentum_basic":
-           self.strategy = mb.Momentum_Basic(self.brokerage.get_prices(self.date, self.tdelta))
+           self.strategy = mb.Momentum_Basic(self.brokerage.get_prices(self.date, self.tdelta), self.start_cash)
+        elif strat == "static_60_40":
+           self.strategy = s6040.Static_60_40(self.brokerage.get_prices(self.date, self.tdelta), self.start_cash)
+        elif strat == "static_IVV":
+           self.strategy = sIVV.Static_IVV(self.brokerage.get_prices(self.date, self.tdelta), self.start_cash)
         #elif strat == "example":
         #   self.strategy = example.Example_Strategy(self.bro...
         else:
@@ -61,6 +70,8 @@ class Manager:
         buy = True
         if buy:
             self._buy_updates()
+
+        self.account_returns[dt.datetime.strftime(self.date, "%Y-%m-%d")] = self.brokerage.account_total(self.date)
 
     def _confirm_updates(self, skip = False):
         """Function to confirm whether the user wants to go through with the
@@ -103,24 +114,35 @@ class Manager:
 def backtesting(strat, start_date_str, years, verbose = False):
 
     #Start date
-    date = dt.datetime.strptime(start_date_str, "%Y-%m-%d")
-  
+    date = dt.datetime.strptime(start_date_str, "%Y-%m-%d") 
+    start_date = dt.datetime.strptime(start_date_str, "%Y-%m-%d")
+
     timedelta = dt.timedelta(days=years*365)
 
     # Make the manager
-    start_cash = 10000
+    start_cash = 1000
     manager = Manager(strat, start_cash, date = date, timedelta = timedelta) 
 
     #Going for 365*years days after start date
     for i in range(int(years*365/30)):
-        date = date + dt.timedelta(days=30)             
         ### I CHANGED THIS FOR MOMENTUM FROM 1 TO 30!!! ###
 
         manager.date = date
         manager.update_investments(skip_confirmation = True)
+        
+        date = date + dt.timedelta(days=30)             
 
     # Grab the percent return
-    percent_return = manager.brokerage.get_percent_growth(date + timedelta)
+    percent_return = manager.brokerage.get_percent_growth(start_date + timedelta)
+    
+    filename = sys.argv[1] + "_pickled"
+    file = open(filename, 'wb')
+
+    # dump information to that file
+    pickle.dump(manager.account_returns, file)
+
+    # close the file
+    file.close()
 
     # Print it and relevant information
     if verbose == False:
@@ -131,14 +153,18 @@ def backtesting(strat, start_date_str, years, verbose = False):
         print(output)
 
     else:
-        print(manager.brokerage.return_summary(date, date + timedelta))
+        print(manager.brokerage.return_summary(start_date, start_date + timedelta))
+
+    
+
+
 
 if __name__ == "__main__":
 
-    start_date_str = "2019-01-01"
+    start_date_str = "2012-03-01"
     
     #           Strategy Name |        ^^^    | total years
-    backtesting(sys.argv[1],    start_date_str,      3, True)
-
+    backtesting(sys.argv[1],    start_date_str,     12, True)
+    
     #backtesting("momentum_basic",    start_date_str,  4, True)
 

@@ -1,7 +1,7 @@
 import datetime as dt
 from strategy import Strategy
 class Momentum_Basic(Strategy):
-    def __init__(self, prices):
+    def __init__(self, prices, start_cash = 10000):
         self.prices = prices
             #Dictionary {Ticker : [(Date, Price), (Date, Price), ... ]       }
 
@@ -23,8 +23,9 @@ class Momentum_Basic(Strategy):
             self.bond_price_dict[curr_date] = curr_price
 
 
-        self.look_back_period = dt.timedelta(days=30)
+        self.look_back_period = dt.timedelta(days=252)
         self.first_purchase = True
+        self.start_cash = start_cash
 
     def strategize(self, date, portfolio):
         
@@ -60,22 +61,22 @@ class Momentum_Basic(Strategy):
         best_performer = ticker_list[best_performer_index]
 
 
-        if self.first_purchase:
-            self.first_purchase = False
-            self.suggested_moves[best_performer] = 10000/todays_prices[best_performer_index]
-            return self.suggested_moves
-
         #if it already is held, maintain
         if portfolio[best_performer] > 0:
             return self.suggested_moves
         
         else:
-            cash_available = 0
-            for ticker in ticker_list:
-                #if it wasn't the best performer, sell it all
-                if ticker != best_performer:
-                    cash_available += portfolio[ticker] * todays_prices[ticker_list.index(ticker)]
-                    self.suggested_moves[ticker] = - portfolio[ticker]
+            if self.first_purchase == True:
+                cash_available = self.start_cash
+                self.first_purchase = False
+
+            else:
+                cash_available = 0
+                for ticker in ticker_list:
+                    #if it wasn't the best performer, sell it all
+                    if ticker != best_performer:
+                        cash_available += portfolio[ticker] * todays_prices[ticker_list.index(ticker)]
+                        self.suggested_moves[ticker] = - portfolio[ticker]
 
             self.suggested_moves[best_performer] = cash_available/todays_prices[best_performer_index]
             return self.suggested_moves

@@ -71,6 +71,8 @@ class Brokerage():
 
         return total
 
+    def account_total(self, date):
+        return self.holdings_total(date) + self.cash
     
     def get_percent_growth(self, end_date):
         final_holdings_total = self.holdings_total(end_date)
@@ -98,8 +100,15 @@ class Brokerage():
         output += "\nBenchmarks:\n"
         IVV_start = self.get_day_price_for_ticker("IVV", start_date)
         IVV_end = self.get_day_price_for_ticker("IVV", end_date)
-        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1}"
+        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1} \n"
         
+        ACWX_start = self.get_day_price_for_ticker("ACWX", start_date)
+        ACWX_end = self.get_day_price_for_ticker("ACWX", end_date)
+        output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {(ACWX_end / ACWX_start) - 1}"
+       
+        print(f"\n\n{start_date} IVV Price = {IVV_start} | ACWX Price = {ACWX_start}")
+        print(f"{end_date} IVV Price = {IVV_end} | ACWX Price = {ACWX_end}")
+
         return output
 
 
