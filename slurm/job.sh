@@ -6,6 +6,6 @@
 
 PARAMS=$(sed "${SLURM_ARRAY_TASK_ID}q;d" params.txt)
 
-python3 manager.py $PARAMS
+python3 ../manager.py $PARAMS
 
 

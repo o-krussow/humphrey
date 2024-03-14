@@ -22,7 +22,7 @@ class Manager:
             raise ValueError("Invalid date")
 
         #loading pickled data
-        file = open('pickled_csvs', 'rb')
+        file = open('../pickled_csvs', 'rb')
         self.csvs = pickle.load(file)
         file.close()
 
@@ -147,7 +147,7 @@ def backtesting(strat, start_date_str, years, verbose = False):
     # Print it and relevant information
     if verbose == False:
         output = ""
-        output += str(percent_return)
+        output += str(percent_return)+","
         for arg in sys.argv[1:]:
             output += arg + ","
         print(output)
@@ -161,10 +161,10 @@ def backtesting(strat, start_date_str, years, verbose = False):
 
 if __name__ == "__main__":
 
-    start_date_str = "2012-03-01"
+    start_date_str = "2018-03-01"
     
     #           Strategy Name |        ^^^    | total years
-    backtesting(sys.argv[1],    start_date_str,     12, True)
+    backtesting(sys.argv[1],    start_date_str,     3, False)
     
     #backtesting("momentum_basic",    start_date_str,  4, True)
 

@@ -25,7 +25,12 @@ class SS_BSP_Strategy(Strategy):
         #Asks itself, "Should I buy Apple on this date?"
 
         todays_price = self.apple_price_dict[dt.datetime.strftime(date, "%Y-%m-%d")]
-        yesterdays_price = self.apple_price_dict[dt.datetime.strftime(date - dt.timedelta(days = 1), "%Y-%m-%d")]
+        try:
+            yesterdays_price = self.apple_price_dict[dt.datetime.strftime(date - dt.timedelta(days = 1), "%Y-%m-%d")]
+        except KeyError:
+            self.suggested_moves["AAPL"] = 0
+            return self.suggested_moves
+
         self.suggested_moves["AAPL"] = 0
 
         pctchange = (todays_price / yesterdays_price) - 1
