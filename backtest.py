@@ -1,14 +1,15 @@
 import brokerage as br
 import new_test_strat as nts
+import new_momentum as nm
 import sys
 
 
-def backtesting(strat, start_date, end_date, verbose = False):
+def backtesting(strat, start_date, end_date, strategy_inputs, verbose = 0):
 
     start_cash = 1000
     brokerage = br.Brokerage(start_cash)
     strategy = strat
-    strategy = nts.new_test_strategy()
+    strategy = nm.new_momentum(strategy_inputs)
 
 
     all_dates = list(brokerage.price_df.index)
@@ -26,28 +27,53 @@ def backtesting(strat, start_date, end_date, verbose = False):
         for ticker, amount in investment_changes.items():
             if amount > 0:
                 brokerage.buy(ticker, date, amount)
+        
+        brokerage.log(date)
 
     # Grab the percent return
     percent_return = brokerage.get_percent_growth(end_date)
+    account_total = brokerage.account_total(end_date)
 
-    # Print it and relevant information
-    if verbose == False:
-        output = ""
-        output += str(percent_return)+","
-        for arg in sys.argv[1:]:
-            output += arg + ","
+    # 3 different levels of printing results
+    if verbose == 0:
+        if brokerage.better_than_IVV(start_date, end_date):
+            output = f'Account Total: {account_total}, Percent Return: {percent_return}, '
+            for key, value in strategy_inputs.items():
+                output += f'{key}: {value} '
+            print(output)
+    
+    elif verbose == 1:
+        output = f'Account Total: {account_total}, Percent Return: {percent_return}, '
+        for key, value in strategy_inputs.items():
+            output += f'{key}: {value} '
         print(output)
 
-    else:
+    elif verbose == 2:
         print(brokerage.return_summary(start_date, end_date))
+        brokerage.plot(strategy_inputs['tickers'], start_date, end_date)
 
 
 if __name__ == "__main__":
+### Mulit-Date range and strategy parameter tests
+    start_dates = ["2012-02-24", "2013-02-25", "2014-02-24", "2015-02-24", "2016-02-24", 
+                   "2017-02-24", "2018-02-23", "2019-02-25", "2020-02-24", "2021-02-24"]
+    end_dates = ["2015-02-24", "2016-02-24", "2017-02-24", "2018-02-23", "2019-02-25", 
+                "2020-02-24", "2021-02-24", "2022-02-24", "2023-02-24", "2024-02-23"]
+    combinations = [(start, end) for start in start_dates for end in end_dates if start < end]
 
-    start_date = "1980-12-12"
-    end_date = "2024-03-01"
-    
-    #           Strategy Name |        ^^^    | 
-    # backtesting(sys.argv[1],    start_date,   end_date, True)
-    
-    backtesting("nts",    start_date,  end_date, True)
+    benchmarks = br.Brokerage()
+
+    for start_date, end_date in combinations:
+        print(f'\n\n{start_date} through {end_date}\n')
+        print(benchmarks.benchmarks(start_date, end_date))
+        print('\nStrategies:\n')
+        for lookback in range(30, 150, 10):
+            strategy_inputs = {'lookback' : lookback, 'tickers': ['IVV', 'ACWX', 'GOVT']}
+            backtesting("new_momentum", start_date,  end_date, strategy_inputs, 0)
+
+
+###In-Depth look at a specific scenario
+    # start_date = "2012-02-24"
+    # end_date = "2024-03-01"
+    # strategy_inputs = {'lookback' : 50, 'tickers': ['IVV', 'ACWX', 'GOVT']}
+    # backtesting("new_momentum", start_date,  end_date, strategy_inputs, 2)

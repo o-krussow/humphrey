@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 import pickle
 import pandas as pd
+import matplotlib.pyplot as plt
+import math
+
 
 '''IDEAS        
         -Eventually will need to track how many trades each ticker has and how long we held each ticker so that we can incorporate management/holding and trading fees
@@ -13,12 +16,14 @@ class Brokerage():
         #Cash is in dollars, every security is in amount of stocks owned
         self.starting_cash = starting_cash
         self.cash = starting_cash
-        self.portfolio = {}
+        self.portfolio = {'_cash': self.cash}
         self.verbose = verbose
         
         file = open('pickled_df', 'rb')
         self.price_df = pickle.load(file)
         file.close()
+
+        self.price_df['Account_Total'] = self.starting_cash
 
 
     def buy(self, ticker, date, stock_quantity):
@@ -35,6 +40,7 @@ class Brokerage():
             self.portfolio[ticker] = 0
 
         self.cash -= dollar_amount
+        self.portfolio['_cash'] = self.cash
         self.portfolio[ticker] += stock_quantity
 
         if self.verbose == True:
@@ -59,6 +65,7 @@ class Brokerage():
 
         #updates our cash amount and resets our holding amount purchased, makes sure to not reset 
         self.cash += dollar_amount
+        self.portfolio['_cash'] = self.cash
         self.portfolio[ticker] -= stock_quantity
 
         if self.verbose == True:
@@ -69,19 +76,29 @@ class Brokerage():
     def holdings_total(self, date):
         total = 0
         for (ticker, stock_quantity) in self.portfolio.items():
-            date_price = self.price_df.at[date, ticker] 
-            total += stock_quantity * date_price
+            if ticker != '_cash':
+                date_price = self.price_df.at[date, ticker] 
+                total += stock_quantity * date_price
 
         return total
 
     def account_total(self, date):
         return self.holdings_total(date) + self.cash
     
+    def log(self, date):
+        self.price_df.loc[date, 'Account_Total'] = self.account_total(date)
+    
     def get_percent_growth(self, end_date):
         final_holdings_total = self.holdings_total(end_date)
         percent_growth = (self.cash + final_holdings_total) / self.starting_cash - 1
         return percent_growth
 
+    def better_than_IVV(self, start_date, end_date):
+        IVV_start = self.price_df.at[start_date, "IVV"]
+        IVV_end = self.price_df.at[end_date, "IVV"]
+        IVV_growth = (IVV_end / IVV_start) - 1
+        account_growth = self.get_percent_growth(end_date)
+        return account_growth > IVV_growth
 
     def return_summary(self, start_date, end_date):
         final_holdings_total = self.holdings_total(end_date)
@@ -90,33 +107,59 @@ class Brokerage():
 
         output += "\nHoldings:\n"
         for (ticker, stock_quantity) in self.portfolio.items():
-            date_price = self.price_df.at[end_date, ticker]
-            cash_value = stock_quantity * date_price
-            output += f"   {ticker}: {stock_quantity} owned, worth {cash_value}\n"
+            if ticker != '_cash':
+                date_price = self.price_df.at[end_date, ticker]
+                cash_value = stock_quantity * date_price
+                output += f"   {ticker}: {stock_quantity} owned, worth {cash_value}\n"
 
         output += "\nTotals:\n"
         output += f"Holdings Total: {final_holdings_total} | Cash Total: {self.cash} | Account Total: {self.cash + final_holdings_total}\n"
 
         output += "\nReturn:\n"
-        output += f"Dollar Return: {self.cash + final_holdings_total - self.starting_cash} | Percent Return: {(self.cash+final_holdings_total) / self.starting_cash - 1} \n"
+        output += f"Cash Growth: {self.cash + final_holdings_total - self.starting_cash} | Percent Return: {(self.cash+final_holdings_total) / self.starting_cash - 1} \n"
 
         output += "\nBenchmarks:\n"
-        AAPL_start = self.price_df.at[start_date, "AAPL"]
-        AAPL_end = self.price_df.at[end_date, "AAPL"]
-        output += f"Apple Dollar Growth: {AAPL_end - AAPL_start} | Apple Percent Growth: {(AAPL_end / AAPL_start) - 1} \n"
+        # AAPL_start = self.price_df.at[start_date, "AAPL"]
+        # AAPL_end = self.price_df.at[end_date, "AAPL"]
+        # output += f"Apple Dollar Growth: {AAPL_end - AAPL_start} | Apple Percent Growth: {(AAPL_end / AAPL_start) - 1} \n"
 
-        # IVV_start = self.price_df.at[start_date, "IVV"]
-        # IVV_end = self.price_df.at[end_date, "IVV"]
-        # output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1} \n"
+        IVV_start = self.price_df.at[start_date, "IVV"]
+        IVV_end = self.price_df.at[end_date, "IVV"]
+        output += f'IVV Start: {IVV_start} =====> IVV End: {IVV_end} \n'
+        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1} \n"
         
-        # ACWX_start = self.price_df.at[start_date, "ACWX"]
-        # ACWX_end = self.price_df.at[end_date, "ACWX"]
-        # output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {(ACWX_end / ACWX_start) - 1}"
-       
-        # print(f"\n\n{start_date} IVV Price = {IVV_start} | ACWX Price = {ACWX_start}")
-        # print(f"{end_date} IVV Price = {IVV_end} | ACWX Price = {ACWX_end}")
+        ACWX_start = self.price_df.at[start_date, "ACWX"]
+        ACWX_end = self.price_df.at[end_date, "ACWX"]
+        output += f'ACWX Start: {ACWX_start} =====> ACWX End: {ACWX_end} \n'
+        output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {(ACWX_end / ACWX_start) - 1}"
 
         return output
+
+
+    def benchmarks(self, start_date, end_date):
+        output = "Benchmarks".center(50, "=")
+
+        IVV_start = self.price_df.at[start_date, "IVV"]
+        IVV_end = self.price_df.at[end_date, "IVV"]
+        output += f'\nIVV Start: {IVV_start} =====> IVV End: {IVV_end} \n'
+        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1} \n"
+        
+        ACWX_start = self.price_df.at[start_date, "ACWX"]
+        ACWX_end = self.price_df.at[end_date, "ACWX"]
+        output += f'ACWX Start: {ACWX_start} =====> ACWX End: {ACWX_end} \n'
+        output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {(ACWX_end / ACWX_start) - 1}"
+
+        return output
+
+
+    def plot(self, tickers, start_date, end_date):
+        df_plot = self.price_df.copy()
+        df_plot = df_plot.iloc[df_plot.index.get_loc(start_date):]
+        for ticker in tickers:
+            df_plot[ticker] = df_plot[ticker]*math.floor(self.starting_cash/df_plot.at[start_date, ticker])
+        tickers.append('Account_Total')
+        df_plot[tickers].plot()
+        plt.show()
 
 
     #potentially deprecated?
