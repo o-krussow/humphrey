@@ -1,4 +1,4 @@
-from strategy import Strategy
+from Strategies.strategy import Strategy
 class ExampleStrategy(Strategy):
     def __init__(self, prices, portfolio):
         self.prices = prices

@@ -1,7 +1,5 @@
 import brokerage as br
-import new_test_strat as nts
-import new_momentum as nm
-import sys
+import Strategies.new_momentum as nm # might find programatic way to import these
 
 
 def backtesting(strat, start_date, end_date, strategy_inputs, verbose = 0):
@@ -9,6 +7,7 @@ def backtesting(strat, start_date, end_date, strategy_inputs, verbose = 0):
     start_cash = 1000
     brokerage = br.Brokerage(start_cash)
     strategy = strat
+    # TODO: should programatically determine which strategy to use
     strategy = nm.new_momentum(strategy_inputs)
 
 
@@ -63,17 +62,17 @@ if __name__ == "__main__":
 
     benchmarks = br.Brokerage()
 
-    for start_date, end_date in combinations:
-        print(f'\n\n{start_date} through {end_date}\n')
-        print(benchmarks.benchmarks(start_date, end_date))
-        print('\nStrategies:\n')
-        for lookback in range(30, 150, 10):
-            strategy_inputs = {'lookback' : lookback, 'tickers': ['IVV', 'ACWX', 'GOVT']}
-            backtesting("new_momentum", start_date,  end_date, strategy_inputs, 0)
+    # for start_date, end_date in combinations:
+    #     print(f'\n\n{start_date} through {end_date}\n')
+    #     print(benchmarks.benchmarks(start_date, end_date))
+    #     print('\nStrategies:\n')
+    #     for lookback in range(30, 150, 10):
+    #         strategy_inputs = {'lookback' : lookback, 'tickers': ['IVV', 'ACWX', 'GOVT']}
+    #         backtesting("new_momentum", start_date,  end_date, strategy_inputs, 0)
 
 
 ###In-Depth look at a specific scenario
-    # start_date = "2012-02-24"
-    # end_date = "2024-03-01"
-    # strategy_inputs = {'lookback' : 50, 'tickers': ['IVV', 'ACWX', 'GOVT']}
-    # backtesting("new_momentum", start_date,  end_date, strategy_inputs, 2)
+    start_date = "2012-02-24"
+    end_date = "2024-03-01"
+    strategy_inputs = {'lookback' : 50, 'tickers': ['IVV', 'ACWX', 'GOVT']}
+    backtesting("new_momentum", start_date,  end_date, strategy_inputs, 2)

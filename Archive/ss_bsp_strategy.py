@@ -1,5 +1,5 @@
 import datetime as dt
-from strategy import Strategy
+from Strategies.strategy import Strategy
 
 class SS_BSP_Strategy(Strategy):
     def __init__(self, prices, cmdline_args):
