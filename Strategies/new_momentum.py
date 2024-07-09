@@ -1,4 +1,4 @@
-from strategy import Strategy
+from Strategies.strategy import Strategy
 import math
 import pandas as pd
 

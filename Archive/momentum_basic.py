@@ -1,6 +1,6 @@
 import datetime as dt
-from strategy import Strategy
-class BSPair(Strategy):
+from Strategies.strategy import Strategy
+class Momentum_Basic(Strategy):
     def __init__(self, prices, start_cash = 10000):
         self.prices = prices
             #Dictionary {Ticker : [(Date, Price), (Date, Price), ... ]       }
@@ -23,7 +23,8 @@ class BSPair(Strategy):
             self.bond_price_dict[curr_date] = curr_price
 
 
-        self.look_back_period = dt.timedelta(days=-1)
+        self.look_back_period = dt.timedelta(days=252)
+        self.first_purchase = True
         self.start_cash = start_cash
 
     def strategize(self, date, portfolio):
@@ -55,10 +56,9 @@ class BSPair(Strategy):
             percent_changes.append((todays_price / lookback_price) - 1)
 
         #Percent_changes will have [US_change, exUS_change, bond_change]
-        for pct_change in percent_changes:
-            if pct_change > self.sell_threshold:
-
-
+            
+        best_performer_index = percent_changes.index(max(percent_changes))
+        best_performer = ticker_list[best_performer_index]
 
 
         #if it already is held, maintain

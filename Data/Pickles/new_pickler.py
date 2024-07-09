@@ -4,7 +4,7 @@ from os.path import isfile, join
 import pandas as pd
 import numpy as np
 
-csvpath = "csvs/"
+csvpath = "../csvs/"
 pickled_df = pd.DataFrame()
 for f in listdir(csvpath):
     if isfile(join(csvpath, f)):

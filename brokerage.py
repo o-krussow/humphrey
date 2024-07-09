@@ -19,11 +19,11 @@ class Brokerage():
         self.portfolio = {'_cash': self.cash}
         self.verbose = verbose
         
-        file = open('pickled_df', 'rb')
+        file = open('Data/Pickles/pickled_df', 'rb')
         self.price_df = pickle.load(file)
         file.close()
 
-        self.price_df['Account_Total'] = self.starting_cash
+        self.price_df['Account_Total'] = float(self.starting_cash)
 
 
     def buy(self, ticker, date, stock_quantity):
@@ -86,7 +86,7 @@ class Brokerage():
         return self.holdings_total(date) + self.cash
     
     def log(self, date):
-        self.price_df.loc[date, 'Account_Total'] = self.account_total(date)
+        self.price_df.loc[date, 'Account_Total'] == self.account_total(date)
     
     def get_percent_growth(self, end_date):
         final_holdings_total = self.holdings_total(end_date)

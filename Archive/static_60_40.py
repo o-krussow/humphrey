@@ -1,6 +1,6 @@
 
 import datetime as dt
-from strategy import Strategy
+from Strategies.strategy import Strategy
 class Static_60_40(Strategy):
     def __init__(self, prices, start_cash = 10000):
         self.prices = prices
