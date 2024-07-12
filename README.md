@@ -1,12 +1,12 @@
 
 
 ### Brokerage:
-Is a stand-in for the API we'll use in real life once backtesting is done
+Maintains a dataframe of symbol prices, a portfolio, and a cash amount. Has functions Buy/Sell, as well as a variety of Summary functions.
 
-### Manager:
-"Top level" file that sits between/above strategy and brokerage. When a strategy wants to buy a stock, it goes through manager, then goes to brokerage. When a strategy wants to check stock prices, it goes through the manager, which then communicates with brokerage. The thinking is that manager should print a summary of all the trades in csv format, that way it's easy to open the output file in excel or whatever to appease chase.
+### Backtest:
+"Managing" file that sits between/above strategy and brokerage. Backtest iterates through the dates of the simulation period, feeding strategy the prices on a given day. Strategy returns a dictionary of Buy/Sell {tickers: quantities} which backtest then feeds to Brokerage to act on. Backtest takes a start and end date, as well as the strategy type and how verbose of a summary to print. If the strategy type requires any unique parameters, Backtest is initialized with a dictionary of these as well.
 
 ### Strategy:
-This is what we'll be testing in backtesting, trying to find the strategy to maximize profits.
+Is initialized with any needed specific parameters via a dictionary. It also maintains a recollection of prices over the testing period. Each day that Strategize() is called (which should be every trading day), the Strategy class recieves a new day of price data which it then appends to its working historical knowledge. Strategize() returns a dictionary of Buy/Sell {tickers: quantities} based on the algorithim and given prices/inputs.
 
 
