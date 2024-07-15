@@ -90,13 +90,13 @@ class Brokerage():
     
     def get_percent_growth(self, end_date):
         final_holdings_total = self.holdings_total(end_date)
-        percent_growth = (self.cash + final_holdings_total) / self.starting_cash - 1
+        percent_growth = ((self.cash + final_holdings_total) / self.starting_cash - 1) * 100
         return percent_growth
 
     def better_than_IVV(self, start_date, end_date):
         IVV_start = self.price_df.at[start_date, "IVV"]
         IVV_end = self.price_df.at[end_date, "IVV"]
-        IVV_growth = (IVV_end / IVV_start) - 1
+        IVV_growth = ((IVV_end / IVV_start) - 1) *100
         account_growth = self.get_percent_growth(end_date)
         return account_growth > IVV_growth
 
@@ -116,22 +116,22 @@ class Brokerage():
         output += f"Holdings Total: {final_holdings_total} | Cash Total: {self.cash} | Account Total: {self.cash + final_holdings_total}\n"
 
         output += "\nReturn:\n"
-        output += f"Cash Growth: {self.cash + final_holdings_total - self.starting_cash} | Percent Return: {(self.cash+final_holdings_total) / self.starting_cash - 1} \n"
+        output += f"Cash Growth: {self.cash + final_holdings_total - self.starting_cash} | Percent Return: {self.get_percent_growth(end_date)} \n"
 
         output += "\nBenchmarks:\n"
         # AAPL_start = self.price_df.at[start_date, "AAPL"]
         # AAPL_end = self.price_df.at[end_date, "AAPL"]
-        # output += f"Apple Dollar Growth: {AAPL_end - AAPL_start} | Apple Percent Growth: {(AAPL_end / AAPL_start) - 1} \n"
+        # output += f"Apple Dollar Growth: {AAPL_end - AAPL_start} | Apple Percent Growth: {((AAPL_end / AAPL_start) - 1)*100} \n"
 
         IVV_start = self.price_df.at[start_date, "IVV"]
         IVV_end = self.price_df.at[end_date, "IVV"]
         output += f'IVV Start: {IVV_start} =====> IVV End: {IVV_end} \n'
-        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1} \n"
+        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {((IVV_end / IVV_start) - 1)*100} \n"
         
         ACWX_start = self.price_df.at[start_date, "ACWX"]
         ACWX_end = self.price_df.at[end_date, "ACWX"]
         output += f'ACWX Start: {ACWX_start} =====> ACWX End: {ACWX_end} \n'
-        output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {(ACWX_end / ACWX_start) - 1}"
+        output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {((ACWX_end / ACWX_start) - 1)*100}"
 
         return output
 
@@ -142,12 +142,12 @@ class Brokerage():
         IVV_start = self.price_df.at[start_date, "IVV"]
         IVV_end = self.price_df.at[end_date, "IVV"]
         output += f'\nIVV Start: {IVV_start} =====> IVV End: {IVV_end} \n'
-        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {(IVV_end / IVV_start) - 1} \n"
+        output += f"S&P Dollar Growth: {IVV_end - IVV_start} | S&P Percent Growth: {((IVV_end / IVV_start) - 1)*100} \n"
         
         ACWX_start = self.price_df.at[start_date, "ACWX"]
         ACWX_end = self.price_df.at[end_date, "ACWX"]
         output += f'ACWX Start: {ACWX_start} =====> ACWX End: {ACWX_end} \n'
-        output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {(ACWX_end / ACWX_start) - 1}"
+        output += f"exUS Dollar Growth: {ACWX_end - ACWX_start} | exUS Percent Growth: {((ACWX_end / ACWX_start) - 1)*100}"
 
         return output
 

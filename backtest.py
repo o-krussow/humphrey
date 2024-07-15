@@ -1,17 +1,30 @@
 import brokerage as br
-import Strategies.new_momentum as nm # might find programatic way to import these
+import importlib
 
+def backtesting(strat: tuple, start_date: str, end_date: str, strategy_inputs: dict, output: str):
+    '''
+    Parameters:
+    strat: (file_name, class_name)
+    start_date: 'yyyy-mm-dd'
+    end_date: 'yyyy-mm-dd'
+    strategy_inputs: {} -> strategy dependent
+    output: "plot" or "panda"
 
-def backtesting(strat, start_date, end_date, strategy_inputs, verbose = 0):
+    Returns:
+    plot -> extensive summary (Brokerage.return_summary)
+            plot of account growth 
 
+    panda -> {'final portfolio': dict, 'percent_growth': float, 'better_than_IVV': bool}
+
+    '''
     start_cash = 1000
     brokerage = br.Brokerage(start_cash)
-    strategy = strat
-    # TODO: should programatically determine which strategy to use
-    strategy = nm.new_momentum(strategy_inputs)
+    strat_file = importlib.import_module(strat[0], package='Strategies')
+    strat_class = getattr(strat_file, strat[1])
+    strategy = strat_class(strategy_inputs)
 
-
-    all_dates = list(brokerage.price_df.index)
+    df = brokerage.price_df[strategy_inputs['tickers']].dropna()
+    all_dates = list(df.index)
     start_date_index = all_dates.index(start_date)
     end_date_index = all_dates.index(end_date)
 
@@ -34,45 +47,15 @@ def backtesting(strat, start_date, end_date, strategy_inputs, verbose = 0):
     account_total = brokerage.account_total(end_date)
 
     # 3 different levels of printing results
-    if verbose == 0:
-        if brokerage.better_than_IVV(start_date, end_date):
-            output = f'Account Total: {account_total}, Percent Return: {percent_return}, '
-            for key, value in strategy_inputs.items():
-                output += f'{key}: {value} '
-            print(output)
-    
-    elif verbose == 1:
-        output = f'Account Total: {account_total}, Percent Return: {percent_return}, '
-        for key, value in strategy_inputs.items():
-            output += f'{key}: {value} '
-        print(output)
+    if output == 'panda':
+        return_dict = {'final portfolio': brokerage.portfolio, 
+                       'percent_growth': brokerage.get_percent_growth(end_date), 
+                       'better_than_IVV': brokerage.better_than_IVV(start_date, end_date)}
+        return return_dict
 
-    elif verbose == 2:
+    elif output == 'plot':
         print(brokerage.return_summary(start_date, end_date))
         brokerage.plot(strategy_inputs['tickers'], start_date, end_date)
-
-
-if __name__ == "__main__":
-### Mulit-Date range and strategy parameter tests
-    start_dates = ["2012-02-24", "2013-02-25", "2014-02-24", "2015-02-24", "2016-02-24", 
-                   "2017-02-24", "2018-02-23", "2019-02-25", "2020-02-24", "2021-02-24"]
-    end_dates = ["2015-02-24", "2016-02-24", "2017-02-24", "2018-02-23", "2019-02-25", 
-                "2020-02-24", "2021-02-24", "2022-02-24", "2023-02-24", "2024-02-23"]
-    combinations = [(start, end) for start in start_dates for end in end_dates if start < end]
-
-    benchmarks = br.Brokerage()
-
-    # for start_date, end_date in combinations:
-    #     print(f'\n\n{start_date} through {end_date}\n')
-    #     print(benchmarks.benchmarks(start_date, end_date))
-    #     print('\nStrategies:\n')
-    #     for lookback in range(30, 150, 10):
-    #         strategy_inputs = {'lookback' : lookback, 'tickers': ['IVV', 'ACWX', 'GOVT']}
-    #         backtesting("new_momentum", start_date,  end_date, strategy_inputs, 0)
-
-
-###In-Depth look at a specific scenario
-    start_date = "2012-02-24"
-    end_date = "2024-03-01"
-    strategy_inputs = {'lookback' : 50, 'tickers': ['IVV', 'ACWX', 'GOVT']}
-    backtesting("new_momentum", start_date,  end_date, strategy_inputs, 2)
+    
+    else:
+        raise TypeError("Output received unexpected input... you fool")

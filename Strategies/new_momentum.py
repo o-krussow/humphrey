@@ -2,7 +2,8 @@ from Strategies.strategy import Strategy
 import math
 import pandas as pd
 
-class new_momentum(Strategy):
+# strategy_inputs = {'lookback' : 50, 'tickers': ['IVV', 'ACWX', 'GOVT']}
+class New_Momentum(Strategy):
     def __init__(self, strategy_inputs):
         self.price_memory = pd.DataFrame()
         self.suggested_moves = {}
