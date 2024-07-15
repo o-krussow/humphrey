@@ -6,5 +6,5 @@ cat $csvfile |
   cut -d',' -f2 |
   paste -d',' <(cat $csvfile | 
   cut -d',' -f1 |
-  cut -d' ' -f1) - > ./csvs/$(basename $csvfile)
+  cut -d' ' -f1) - > ../csvs/$(basename $csvfile)
 done

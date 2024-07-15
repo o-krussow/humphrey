@@ -1,10 +1,10 @@
 import pickle
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, dirname
 import pandas as pd
 import numpy as np
 
-csvpath = "../csvs/"
+csvpath = join(dirname(__file__), '../csvs/')
 pickled_df = pd.DataFrame()
 for f in listdir(csvpath):
     if isfile(join(csvpath, f)):
